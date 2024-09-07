@@ -1,5 +1,7 @@
 const func = require("./funckcije");
+const fs = require("fs");
 const express = require("express");
+const https = require("https");
 const cors = require("cors");
 const app = express();
 
@@ -10,19 +12,8 @@ app.use(
     allowedHeaders: "Content-Type",
   })
 );
-app.use(express.json());
 
-app.get("/getFullData", (req, res) => {
-  res.send({
-    "System info": func.System(),
-    "Network interfaces": func.Network(),
-    "Disk info": func.Disk()[1],
-    "Average load": func.LoadAvg(),
-    "CPU info": func.CPU(),
-    "Memory info": func.Memory(),
-    "Last login": func.Login(),
-  });
-});
+app.use(express.json());
 
 app.get("/networkInfo", (req, res) => {
   res.send({
@@ -66,11 +57,18 @@ app.get("/memInfo", (req, res) => {
   });
 });
 
+app.get("*", (req, res) => {
+  res.send({ error: "Error 404"});
+});
 
 try {
-  app.listen(43567, () => {
-    console.log("Server started at port 43567");
-  });
+  const options = {
+	key: fs.readFileSync('keys/key.pem'),
+	cert: fs.readFileSync('keys/cert.pem')
+   }
+   https.createServer(options, app).listen(43567);
+   console.log("Server stared at port 43567");
+
 } catch (error) {
   console.log(`Error starting api: ${error}`);
 }
